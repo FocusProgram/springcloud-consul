@@ -3,20 +3,44 @@
 **Consul**
 
 ---
-#### 1.什么是Consul?
+
+- **文章目录**
+
+* [1\.什么是Consul?](#1%E4%BB%80%E4%B9%88%E6%98%AFconsul)
+* [2\.安装Consul](#2%E5%AE%89%E8%A3%85consul)
+  * [2\.1 二进制文件安装 <a href="https://www\.consul\.io/downloads\.html" rel="nofollow">下载地址</a>](#21-%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%96%87%E4%BB%B6%E5%AE%89%E8%A3%85-%E4%B8%8B%E8%BD%BD%E5%9C%B0%E5%9D%80)
+  * [2\.2 源码编译](#22-%E6%BA%90%E7%A0%81%E7%BC%96%E8%AF%91)
+  * [2\.3 Docker安装](#23-docker%E5%AE%89%E8%A3%85)
+    * [2\.3\.1 拉取镜像](#231-%E6%8B%89%E5%8F%96%E9%95%9C%E5%83%8F)
+    * [2\.3\.2 consul 参数详解](#232-consul-%E5%8F%82%E6%95%B0%E8%AF%A6%E8%A7%A3)
+    * [2\.3\.3 consul 端口详解](#233-consul-%E7%AB%AF%E5%8F%A3%E8%AF%A6%E8%A7%A3)
+    * [2\.3\.4 consul 集群启动Consul](#234-consul-%E9%9B%86%E7%BE%A4%E5%90%AF%E5%8A%A8consul)
+* [3\. 客户端集成Consul](#3-%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%9B%86%E6%88%90consul)
+  * [3\.1 引入maven依赖](#31-%E5%BC%95%E5%85%A5maven%E4%BE%9D%E8%B5%96)
+  * [3\.2 项目结构](#32-%E9%A1%B9%E7%9B%AE%E7%BB%93%E6%9E%84)
+  * [3\.3 环境依赖](#33-%E7%8E%AF%E5%A2%83%E4%BE%9D%E8%B5%96)
+  * [3\.4 配置文件](#34-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+    * [3\.4\.1 application\.yml](#341-applicationyml)
+    * [3\.4\.2 bootstrap\.yml](#342-bootstrapyml)
+    * [3\.4\.3 动态参数接收类](#343-%E5%8A%A8%E6%80%81%E5%8F%82%E6%95%B0%E6%8E%A5%E6%94%B6%E7%B1%BB)
+    * [3\.4\.4 controller接口](#344-controller%E6%8E%A5%E5%8F%A3)
+  * [3\.5 consul中创建节点数据](#35-consul%E4%B8%AD%E5%88%9B%E5%BB%BA%E8%8A%82%E7%82%B9%E6%95%B0%E6%8D%AE)
+  * [3\.6 验证从consul中获取的配置文件](#36-%E9%AA%8C%E8%AF%81%E4%BB%8Econsul%E4%B8%AD%E8%8E%B7%E5%8F%96%E7%9A%84%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+
+# 1.什么是Consul?
 
 > [Consul](https://github.com/hashicorp/consul) 是一个服务网格解决方案，提供了一个全功能的控制平面，具有服务发现、配置和分割功能。 这些特性中的每一个都可以根据需要单独使用，或者可以一起使用来构建一个完整的服务网格。 consul需要一个数据平面，并且支持代理和本地集成模型。 执政带有一个简单的内置代理，这样一切都可以开箱即用，而且还支持第三方代理集成。
 
-#### 2.安装Consul
+# 2.安装Consul
 
 * **安装方式**
   * Precompiled Binaries 预编译二进制文件
   * Compiling from Source 从源头编译
   * Docker
 
-##### 2.1 二进制文件安装 [下载地址](https://www.consul.io/downloads.html)
+## 2.1 二进制文件安装 [下载地址](https://www.consul.io/downloads.html)
 
-##### 2.2 源码编译
+## 2.2 源码编译
 
 ```linux
 $ mkdir -p $GOPATH/src/github.com/hashicorp && cd !$
@@ -32,15 +56,15 @@ $ make dev
 $ consul -v 验证安装是否成功
 ```
 
-##### 2.3 Docker安装
+## 2.3 Docker安装
 
-###### 2.3.1 拉取镜像
+### 2.3.1 拉取镜像
 
 ```
 $ docker pull consul:latest
 ```
 
-###### 2.3.1 consul 参数详解
+### 2.3.2 consul 参数详解
 
 > - –net=host docker参数, 使得docker容器越过了net namespace的隔离，免去手动指定端口映射的步骤
 > - -server consul支持以server或client的模式运行, server是服务发现模块的核心, client主要用于转发请求
@@ -59,7 +83,7 @@ $ docker pull consul:latest
 > - -ui 开启ui界面
 > - -join 指定ip, 加入到已有的集群中
 
-###### 2.3.2 consul 端口详解
+### 2.3.3 consul 端口详解
 
 > - 8500 : http 端口，用于 http 接口和 web ui访问；
 > - 8300 : server rpc 端口，同一数据中心 consul server 之间通过该端口通信；
@@ -67,7 +91,7 @@ $ docker pull consul:latest
 > - 8302 : serf wan 端口，不同数据中心 consul server 通过该端口通信; agent Server使用，处理与其他datacenter的gossip通信；
 > - 8600 : dns 端口，用于已注册的服务发现；
 
-###### 2.3.2 consul 集群启动Consul
+### 2.3.4 consul 集群启动Consul
 
 **创建挂载目录**
 
@@ -131,9 +155,9 @@ docker exec -it consul-one consul members
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/20200307154346.png)
 
-#### 3. 客户端集成Consul
+# 3. 客户端集成Consul
 
-##### 3.1 引入maven依赖
+## 3.1 引入maven依赖
 
 ```java
 <dependency>
@@ -161,11 +185,11 @@ docker exec -it consul-one consul members
 </dependency>
 ```
 
-##### 3.2 项目结构
+## 3.2 项目结构
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/20200307231701.png)
 
-##### 3.3 环境依赖
+## 3.3 环境依赖
 
 | 名称          | 值              | 备注                                                         |
 |-------------|----------------|------------------------------------------------------------|
@@ -173,9 +197,9 @@ docker exec -it consul-one consul members
 | Consul      | 1\.5\.2        | 注册中心  |
 | SpringCloud | Greenwich\.SR1 |                                                            |
 
-##### 3.4 配置文件
+## 3.4 配置文件
 
-###### 3.4.1 application.yml
+### 3.4.1 application.yml
 
 ```java
 server.port=8090
@@ -183,7 +207,7 @@ server.port=8090
 company.pay.money=0
 ```
 
-###### 3.4.2 bootstrap.yml
+### 3.4.2 bootstrap.yml
 
 ```java
 #服务名称
@@ -210,7 +234,7 @@ spring.cloud.config.override-system-properties=false
 
 > 注：关于consul的配置文件一定要放置在bootstrap.yml中才可以生效
 
-###### 3.4.3 动态参数接收类
+### 3.4.3 动态参数接收类
 
 ```java
 @ConfigurationProperties("company.pay")
@@ -230,7 +254,7 @@ public class PayMoneyProperties {
 >@Component 表示将该类加载到IOC容器中
 在实战中尝试用@Value的方式获取动态，只能实现服务重启后获取动态的config server 的值,最终找到解决方案在相应的取值类上加@RefreshScope注解，完美解决。
 
-###### 3.4.4 controller接口
+### 3.4.4 controller接口
 
 ```
 @RestController
@@ -256,7 +280,7 @@ public class ConsulConfigController {
 
 > 提供了两种注入值的方法，均可，第一种采用@Value进行注入，第二种采用ConfigurationProperties进行注入
 
-##### 3.5 consul中创建节点数据
+## 3.5 consul中创建节点数据
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/20200307233617.png)
 
@@ -269,7 +293,7 @@ public class ConsulConfigController {
 >config/waiter-service,prd/consul
 
 
-##### 3.5 验证从consul中获取的配置文件
+## 3.6 验证从consul中获取的配置文件
 
 访问 [http://localhost:8090/consul/pay/money](http://localhost:8090/consul/pay/money)
 
