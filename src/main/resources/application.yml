@@ -1,0 +1,9 @@
+# 端口
+server:
+  port: 8090
+
+# 演示数据key-value
+company:
+  pay:
+    money: 1000
+

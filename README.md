@@ -26,6 +26,7 @@
     * [3\.4\.4 controller接口](#344-controller%E6%8E%A5%E5%8F%A3)
   * [3\.5 consul中创建节点数据](#35-consul%E4%B8%AD%E5%88%9B%E5%BB%BA%E8%8A%82%E7%82%B9%E6%95%B0%E6%8D%AE)
   * [3\.6 验证从consul中获取的配置文件](#36-%E9%AA%8C%E8%AF%81%E4%BB%8Econsul%E4%B8%AD%E8%8E%B7%E5%8F%96%E7%9A%84%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+* [4\. 注意事项](#4-%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9)
 
 # 1.什么是Consul?
 
@@ -96,17 +97,17 @@ $ docker pull consul:latest
 **创建挂载目录**
 
 ```
-mkdir -p /data/consul-one/{conf,data}
+$ mkdir -p /data/consul-one/{conf,data}
 
-mkdir -p /data/consul-two/{conf,data}
+$ mkdir -p /data/consul-two/{conf,data}
 
-mkdir -p /data/consul-three/{conf,data}
+$ mkdir -p /data/consul-three/{conf,data}
 ```
 
 **启动第一个Consul节点（consul-one）**
 
-```linux
-docker run --name consul-one \
+```
+$ docker run --name consul-one \
 -d -p 8500:8500 -p 8300:8300 \
 -p 8301:8301 -p 8302:8302 -p 8600:8600 \
 --restart=always \
@@ -118,29 +119,31 @@ consul agent -server -bootstrap-expect 2 -ui -bind=0.0.0.0 -client=0.0.0.0
 **查看consul-one的ip地址**
 
 ```
-docker inspect --format='{{.NetworkSettings.IPAddress}}' consul-one
+$ docker inspect --format='{{.NetworkSettings.IPAddress}}' consul-one
+
+172.17.0.2
 ```
 
 **启动第二个Consul节点（consul-two）加入到consul-one**
 
 ```
-docker run --name consul-two \
+$ docker run --name consul-two \
 -d -p 8501:8500 \
 --restart=always \
 -v /data/consul-two/conf/:/consul/conf/ \
 -v /data/consul-two/data/:/consul/data/ \
-consul agent -server -ui -bind=0.0.0.0 -client=0.0.0.0 -join 172.17.0.3
+consul agent -server -ui -bind=0.0.0.0 -client=0.0.0.0 -join 172.17.0.2
 ```
 
 **启动第二个Consul节点（consul-three）加入到consul-one**
 
 ```
-docker run --name consul-three \
+$ docker run --name consul-three \
 -d -p 8502:8500 \
 --restart=always \
 -v /data/consul-three/conf/:/consul/conf/ \
 -v /data/consul-three/data/:/consul/data/ \
-consul agent -server -ui -bind=0.0.0.0 -client=0.0.0.0 -join 172.17.0.3
+consul agent -server -ui -bind=0.0.0.0 -client=0.0.0.0 -join 172.17.0.2
 ```
 
 **查看consul集群信息**
@@ -161,11 +164,6 @@ docker exec -it consul-one consul members
 
 ```java
 <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-web</artifactId>
-</dependency>
-
-<dependency>
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-consul-discovery</artifactId>
 </dependency>
@@ -173,15 +171,9 @@ docker exec -it consul-one consul members
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-starter-consul-config</artifactId>
 </dependency>
-
 <dependency>
     <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter</artifactId>
-</dependency>
-
-<dependency>
-    <groupId>org.projectlombok</groupId>
-    <artifactId>lombok</artifactId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
 </dependency>
 ```
 
@@ -191,45 +183,77 @@ docker exec -it consul-one consul members
 
 ## 3.3 环境依赖
 
-| 名称          | 值              | 备注                                                         |
+| 依赖          | 版本              | 备注                                                         |
 |-------------|----------------|------------------------------------------------------------|
 | JDK         | 1\.8           |                                                            |
-| Consul      | 1\.5\.2        | 注册中心  |
-| SpringCloud | Greenwich\.SR1 |                                                            |
+| Consul      | 2.0.0.RELEASE        |           |
+| SpringCloud | Finchley.RELEASE |               |
+| SpringBoot | 2.0.4.RELEASE |                   |
 
 ## 3.4 配置文件
 
 ### 3.4.1 application.yml
 
-```java
-server.port=8090
+```
+# 端口
+server:
+  port: 8090
 
-company.pay.money=0
+# 演示数据key-value
+company:
+  pay:
+    money: 1000
 ```
 
 ### 3.4.2 bootstrap.yml
 
 ```java
-#服务名称
-spring.application.name=waiter-service
-#consul  地址
-spring.cloud.consul.host=192.168.80.110
-#consul  端口
-spring.cloud.consul.port=8500
-spring.cloud.consul.discovery.prefer-ip-address=true
-#consul配置中心功能，默认true
-spring.cloud.consul.config.enabled=true
-#consul配置中心值的格式
-spring.cloud.consul.config.format=yaml
-#指定consul配置文件目录前缀为config
-spring.cloud.consul.config.prefix=config
-#指定consul配置文件目录后缀结束为consul
-spring.cloud.consul.config.data-key=consul
-#指定激活配置文件的版本（dev/prd）
-spring.profiles.active=prd
-#是否重载本地配置
-spring.cloud.config.override-system-properties=false
-#consul配置中心的目录为 ${spring.cloud.consul.config.prefix}/${spring.application.name},${spring.profiles.active}/${spring.cloud.consul.config.data-key}
+# 服务名
+spring:
+  application:
+    name: waiter-service
+
+  profiles:
+    active: prd
+
+# 是否重载本地配置
+  cloud:
+    config:
+      override-system-properties: false
+    consul:
+      # 指定consul的ip地址和端口
+      host: 192.168.80.130
+      port: 8500
+      config:
+        # 指定consul配置文件目录后缀结束为consul
+        data-key: consul
+        # consul配置中心功能，默认true
+        enabled: true
+        # consul配置中心值的格式
+        format: yaml
+        # 指定consul配置文件目录前缀为config
+        prefix: config
+      discovery:
+        # 指定服务版本信息
+        tags: version=1.0,auth=Mr.Kong
+        # 是否需要注册到consul，默认为true
+        register: true
+        # 注册的实例ID (唯一标志)
+        instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}
+        # 服务名称
+        service-name: ${spring.application.name}
+        # 服务请求端口
+        port: ${server.port}
+        # 指定开启ip地址注册
+        prefer-ip-address: true
+        # 当前服务请求ip
+        ip-address: ${spring.cloud.client.ip-address}
+        # 指定consul心跳检测地址
+        health-check-url: http://${spring.cloud.client.ip-address}:${server.port}/actuator/health
+        # 指定consul心跳检测间隔
+        health-check-interval: 15s
+
+# consul配置中心的目录为 ${spring.cloud.consul.config.prefix}/${spring.application.name},${spring.profiles.active}/${spring.cloud.consul.config.data-key}
 ```
 
 > 注：关于consul的配置文件一定要放置在bootstrap.yml中才可以生效
@@ -301,4 +325,36 @@ public class ConsulConfigController {
 
 ![](https://gitee.com/FocusProgram/PicGo/raw/master/20200307234217.png)
 
+# 4. 注意事项
 
+> consul出现Critical Checks错误
+
+![](http://image.focusprogram.top/20200514140255.png)
+
+![](http://image.focusprogram.top/20200514141020.png)
+
+```
+$ curl http://192.168.247.1:8090/actuator/health
+
+{"timestamp":"2020-05-14T06:07:04.905+0000","status":404,"error":"Not Found","message":"No message available","path":"/actuator/health"}
+```
+
+解决措施：引入maven依赖spring-boot-starter-actuator
+
+再次访问
+
+```
+$ curl http://192.168.247.1:8090/actuator/health
+
+{"status":"UP"}
+```
+
+注：consul部署在虚拟机，所以本地网络可以和虚拟机宿主机互通，如果采用云服务器，则服务正常进行健康检查，必须将服务部署在和consul同网段下的云服务器上才可以正常通讯，健康检查才可以通过，该服务才可以正常调用。
+
+> 引入spring-boot-starter-actuator版本依赖错误
+
+![](http://image.focusprogram.top/20200514135934.png)
+
+解决措施：spring-boot版本为2.0.4.RELEASE，spring-cloud版本为Finchley.RELEASE
+
+</font>

@@ -1,0 +1,46 @@
+# 服务名
+spring:
+  application:
+    name: waiter-service
+
+  profiles:
+    active: prd
+
+  # 是否重载本地配置
+  cloud:
+    config:
+      override-system-properties: false
+    consul:
+      # 指定consul的ip地址和端口
+      host: 192.168.80.130
+      port: 8500
+      config:
+        # 指定consul配置文件目录后缀结束为consul
+        data-key: consul
+        # consul配置中心功能，默认true
+        enabled: true
+        # consul配置中心值的格式
+        format: yaml
+        # 指定consul配置文件目录前缀为config
+        prefix: config
+      discovery:
+        # 指定服务版本信息
+        tags: version=1.0,auth=Mr.Kong
+        # 是否需要注册到consul，默认为true
+        register: true
+        # 注册的实例ID (唯一标志)
+        instance-id: ${spring.application.name}:${spring.cloud.client.ip-address}
+        # 服务名称
+        service-name: ${spring.application.name}
+        # 服务请求端口
+        port: ${server.port}
+        # 指定开启ip地址注册
+        prefer-ip-address: true
+        # 当前服务请求ip
+        ip-address: ${spring.cloud.client.ip-address}
+        # 指定consul心跳检测地址
+        health-check-url: http://${spring.cloud.client.ip-address}:${server.port}/actuator/health
+        # 指定consul心跳检测间隔
+        health-check-interval: 15s
+
+# consul配置中心的目录为 ${spring.cloud.consul.config.prefix}/${spring.application.name},${spring.profiles.active}/${spring.cloud.consul.config.data-key}
