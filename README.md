@@ -104,6 +104,12 @@ $ mkdir -p /data/consul-two/{conf,data}
 $ mkdir -p /data/consul-three/{conf,data}
 ```
 
+**创建consul的网段**
+
+```
+$ docker network create --driver=bridge --subnet=172.20.0.0/16 consul_network
+```
+
 **启动第一个Consul节点（consul-one）**
 
 ```
@@ -113,7 +119,8 @@ $ docker run --name consul-one \
 --restart=always \
 -v /data/consul-one/conf/:/consul/conf/ \
 -v /data/consul-one/data/:/consul/data/ \
-consul agent -server -bootstrap-expect 2 -ui -bind=0.0.0.0 -client=0.0.0.0
+--net consul_network --ip 172.20.0.2 consul \
+agent -server -bootstrap-expect 2 -ui -bind=0.0.0.0 -client=0.0.0.0
 ```
 
 **查看consul-one的ip地址**
@@ -132,7 +139,8 @@ $ docker run --name consul-two \
 --restart=always \
 -v /data/consul-two/conf/:/consul/conf/ \
 -v /data/consul-two/data/:/consul/data/ \
-consul agent -server -ui -bind=0.0.0.0 -client=0.0.0.0 -join 172.17.0.2
+--net consul_network --ip 172.20.0.3 consul \
+agent -server -ui -bind=0.0.0.0 -client=0.0.0.0 -join 172.20.0.2
 ```
 
 **启动第二个Consul节点（consul-three）加入到consul-one**
@@ -143,7 +151,8 @@ $ docker run --name consul-three \
 --restart=always \
 -v /data/consul-three/conf/:/consul/conf/ \
 -v /data/consul-three/data/:/consul/data/ \
-consul agent -server -ui -bind=0.0.0.0 -client=0.0.0.0 -join 172.17.0.2
+--net consul_network --ip 172.20.0.4 consul \
+agent -server -ui -bind=0.0.0.0 -client=0.0.0.0 -join 172.20.0.2
 ```
 
 **查看consul集群信息**
